@@ -54,13 +54,56 @@ function AudioRecorder() {
     formData.append("audioFile", blob, "audio.mp3");
     console.log(formData);
 
-    const response = await fetch("http://localhost:8080/audio", {
+    let response = await fetch("http://localhost:8080/audio", {
       method: "POST",
       body: formData,
     });
 
     const data = await response.json();
     console.log(data);
+
+    // fetchJson(data).then((data) => {
+    //   console.log(data.speakers.embeddings.A); // This will log the JSON object
+    // });
+
+    const transcription = createTranscription(data);
+
+    response = await fetch("http://localhost:8080/audio/listen", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ transcription: transcription }),
+    });
+    const data2 = await response.json();
+    console.log(data2);
+  }
+
+  async function fetchJson(url) {
+    try {
+      const response = await fetch(url);
+
+      // Check if the request was successful
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching JSON:", error);
+    }
+  }
+
+  function createTranscription(jsonObject) {
+    let formattedString = "";
+
+    jsonObject.segments.forEach((segment) => {
+      formattedString += `Other person: ${segment.text}\n`;
+    });
+
+    console.log(formattedString);
+    return formattedString;
   }
 
   return (
